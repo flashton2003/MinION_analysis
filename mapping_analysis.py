@@ -16,7 +16,7 @@ from Bio import SeqIO
 
 raw = '/Users/flashton/Dropbox/H58_from_iMac/H58/data/H566_30min/2014.08.19.H566_30min.mapped.fastq'
 
-blast_format = '/Users/flashton/Dropbox/H58_minion/results/2014.07.26.ST1_R7/2014.07.26_minion_vs_rabsch.blast.txt'
+blast_format = '/Users/flashton/Dropbox/ulf_minion/TXT_last_map_against_spades_contigs_unmapped-EcWSU1.blast'
 
 pileup = '/Users/flashton/Dropbox/minion/results/minion_vs_ct18.pileup'
 reference = '/Users/flashton/Dropbox/minion/data/ct18.fa'
@@ -120,19 +120,15 @@ def print_res_dict(res_dict):
 
     :param res_dict:
     """
-    outhandle = open('/Users/flashton/Dropbox/H58_from_iMac/H58/blast_txt', 'w')
-    print 'query	subject	orientation	score	match len	match pos	match gap	q start	q stop	s start	s stop'
+    #outhandle = open('/Users/flashton/Dropbox/H58_from_iMac/H58/blast_txt', 'w')
+    print 'query    read len	subject	orientation	score	match len	match pos	match gap	q start	q stop	s start	s stop'
     for read in res_dict:
     #print each, res_dict[each]
     #print res_dict[each].hits
         for every in res_dict[read].hits:
-            outhandle.write('%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' % (res_dict[read].read_name, res_dict[read].read_len, every.sbjct, every.orientation, every.score, every.match_len, every.match_pos, every.match_gap, every.query_start, every.query_stop, every.sbjct_start, every.sbjct_stop))
-    outhandle.close()
-
-
-
-
-
+            print('%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' % (res_dict[read].read_name, res_dict[read].read_len,
+                                                                    every.sbjct, every.orientation, every.score, every.match_len, every.match_pos, every.match_gap, every.query_start, every.query_stop, every.sbjct_start, every.sbjct_stop))
+    #outhandle.close()
 
     #print(hit_dict)
 
@@ -209,14 +205,14 @@ def pull_out_mapped_reads(raw, res_dict):
 
 res_dict = parse_blast_text(blast_format)
 res_dict = find_best_hits(res_dict)
-#print_res_dict(res_dict)
+print_res_dict(res_dict)
 
 #with open('/Users/flashton/Dropbox/H58_from_iMac/H58/res_dict.pick', 'wb') as outhandle:
 #    pickle.dump(res_dict, outhandle)
 
 #res_dict = pickle.load(open('/Users/flashton/Dropbox/H58_from_iMac/H58/res_dict.pick'))
 
-mapping_stats(res_dict)
+#mapping_stats(res_dict)
 
 #pull_out_mapped_reads(raw, res_dict)
 
