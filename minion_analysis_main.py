@@ -6,7 +6,7 @@ https://github.com/arq5x/poretools
 '''
 
 import argparse
-from minion_analysis import __version__
+from __init__ import __version__
 import run_last
 
 class ArgumentParserWithDefaults(argparse.ArgumentParser):
