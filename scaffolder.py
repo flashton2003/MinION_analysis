@@ -5,7 +5,7 @@ try:
 except:
     import pickle
 
-from minion_core import BlastRes, BlastHit, MinionRead
+from minion_core import MinionRead
 
 contigs = '/Users/flashton/Dropbox/H58_from_iMac/H58/data/refs/ST1_pAKU_contigs.fa'
 

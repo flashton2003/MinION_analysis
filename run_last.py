@@ -16,4 +16,5 @@ def run_last(reference, query, outhandle):
 
 
 
-run_last(reference, query, outhandle)
+if __name__ == '__main__':
+    run_last(reference, query, outhandle)
