@@ -13,10 +13,10 @@ def run_last(reference, query, outdir):
     print '### indexing reference for last alignment ###'
     os.system('lastdb -Q 0 %s.lastindex %s' % (reference_path, reference))
     print '### LAST is aligning the query against the reference ###'
-    #os.system('lastal -s 2 -T 0 -Q 0 -a 1 %s.lastindex %s > %s/%s_vs_%s.last.txt' % (reference_name, query, outdir,
-    # query_name, reference_name))
+    os.system('lastal -s 2 -T 0 -Q 0 -a 1 %s.lastindex %s > %s/%s_vs_%s.last.txt' % (reference_path, query, outdir,
+     query_name, reference_name))
     print '### converting the last format to blast format using maf-convert.py ###'
-    #os.system('maf-convert.py blast %s/%s_vs_%s.last.txt > %s/%s_vs_%s.blast.txt' % (outdir, query_name, reference_name, outdir,
-    #                                                                               query_name, reference_name))
+    os.system('maf-convert.py blast %s/%s_vs_%s.last.txt > %s/%s_vs_%s.blast.txt' % (outdir, query_name, reference_name, outdir,
+                                                                                   query_name, reference_name))
 
 
