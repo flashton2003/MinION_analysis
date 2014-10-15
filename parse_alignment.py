@@ -2,33 +2,20 @@ from __future__ import division
 
 __author__ = 'flashton'
 
-from minion_analysis import BlastRes, BlastHit, print_res_dict
-
+import re
+from __init__ import MinionRead, ReadContigMatch
 try:
     import cPickle as pickle
 except:
     import pickle
 
-import re
-import numpy as np
-from Bio import SeqIO
-############################## variables ##############################
+try:
+    import numpy as np
+except ImportError:
+    print 'No Numpy, mapping_stats wont work but is not accessible via the command line interface anyway'
 
-#raw = '/Users/flashton/Dropbox/H58_from_iMac/H58/data/H566_30min/2014.08.19.H566_30min.mapped.fastq'
-
-#blast_format = '/Users/flashton/Dropbox/ulf_minion/TXT_last_map_against_spades_contigs_unmapped-EcWSU1.blast'
-
-#pileup = '/Users/flashton/Dropbox/minion/results/minion_vs_ct18.pileup'
-#reference = '/Users/flashton/Dropbox/minion/data/ct18.fa'
-
-
-############################## functions ##############################
 
 def parse_blast_text(blast_file):
-    """
-
-    :rtype : dictionary
-    """
     res_dict = {}
     read_name = ''
     with open(blast_file) as fi:
@@ -40,97 +27,91 @@ def parse_blast_text(blast_file):
                 sbjct = ''
 
                 if read_name != '':
-                    #blast_hit.print_res(blast_res.read_name, blast_res.read_len)
-                    blast_hit.query_start = min(blast_hit.query_coordinates)
-                    blast_hit.query_stop = max(blast_hit.query_coordinates)
-                    blast_hit.sbjct_start = min(blast_hit.sbjct_coordinates)
-                    blast_hit.sbjct_stop = max(blast_hit.sbjct_coordinates)
-                    blast_res.hits.append(blast_hit)
+                    #read_contig_match.print_res(blast_res.read_name, blast_res.read_len)
+                    read_contig_match.query_start = min(read_contig_match.query_coordinates)
+                    read_contig_match.query_stop = max(read_contig_match.query_coordinates)
+                    read_contig_match.sbjct_start = min(read_contig_match.sbjct_coordinates)
+                    read_contig_match.sbjct_stop = max(read_contig_match.sbjct_coordinates)
+                    minion_read.hits.append(read_contig_match)
 
                 read_name = line.split(' ')[-1]
-                blast_res = BlastRes()
+                minion_read = MinionRead()
                 #print dir(blast_res)
 
-                res_dict[read_name] = blast_res
-                blast_res.read_name = read_name
+                res_dict[read_name] = minion_read
+                minion_read.read_name = read_name
                 #print blast_res.read_name
 
             if line.startswith('('):
                 read_len = int(line.replace('(', ' ').split(' ')[1])
-                blast_res.read_len = read_len
+                minion_read.read_len = read_len
 
             if line.startswith('>NODE'):
                 if sbjct != '':
 
-                    #blast_hit.print_res(blast_res.read_name, blast_res.read_len)
-                    blast_hit.query_start = min(blast_hit.query_coordinates)
-                    blast_hit.query_stop = max(blast_hit.query_coordinates)
-                    blast_hit.sbjct_start = min(blast_hit.sbjct_coordinates)
-                    blast_hit.sbjct_stop = max(blast_hit.sbjct_coordinates)
-                    blast_res.hits.append(blast_hit)
+                    #read_contig_match.print_res(blast_res.read_name, blast_res.read_len)
+                    read_contig_match.query_start = min(read_contig_match.query_coordinates)
+                    read_contig_match.query_stop = max(read_contig_match.query_coordinates)
+                    read_contig_match.sbjct_start = min(read_contig_match.sbjct_coordinates)
+                    read_contig_match.sbjct_stop = max(read_contig_match.sbjct_coordinates)
+                    minion_read.hits.append(read_contig_match)
 
                 sbjct = line[1:]
                 #print sbjct
-                blast_hit = BlastHit()
-                blast_hit.sbjct = sbjct
+                read_contig_match = ReadContigMatch()
+                read_contig_match.sbjct = sbjct
 
             if line.startswith('Scor'):
                 score = line.split(' ')[-1]
-                blast_hit.score = int(score)
+                read_contig_match.score = int(score)
 
             if line.startswith('Identi'):
                 split_line = line.replace('/', ' ').split(' ')
-                blast_hit.match_len = int(split_line[3])
-                blast_hit.match_pos = int(split_line[2])
+                read_contig_match.match_len = int(split_line[3])
+                read_contig_match.match_pos = int(split_line[2])
                 try:
-                    blast_hit.match_gap = int(split_line[7])
+                    read_contig_match.match_gap = int(split_line[7])
                 except IndexError:
-                    blast_hit.match_gap = 0
+                    read_contig_match.match_gap = 0
 
             if line.startswith('Query:'):
                 split_line = line.split()
 
-                blast_hit.query_coordinates.append(int(split_line[1]))
-                blast_hit.query_coordinates.append(int(split_line[3]))
+                read_contig_match.query_coordinates.append(int(split_line[1]))
+                read_contig_match.query_coordinates.append(int(split_line[3]))
 
             if line.startswith('Sbjct:'):
                 split_line = line.split()
-                blast_hit.sbjct_coordinates.append(int(split_line[1]))
-                blast_hit.sbjct_coordinates.append(int(split_line[3]))
+                read_contig_match.sbjct_coordinates.append(int(split_line[1]))
+                read_contig_match.sbjct_coordinates.append(int(split_line[3]))
 
             if line.startswith('Strand'):
                 split_line = line.split()
                 to_join = [split_line[2], split_line[4]]
                 ori = '/'.join(to_join)
-                blast_hit.orientation = ori
+                read_contig_match.orientation = ori
 
 
 
-        #blast_hit.print_res(blast_res.read_name, blast_res.read_len)
-        blast_hit.query_start = min(blast_hit.query_coordinates)
-        blast_hit.query_stop = max(blast_hit.query_coordinates)
-        blast_hit.sbjct_start = min(blast_hit.sbjct_coordinates)
-        blast_hit.sbjct_stop = max(blast_hit.sbjct_coordinates)
-        blast_res.hits.append(blast_hit)
+        #read_contig_match.print_res(blast_res.read_name, blast_res.read_len)
+        read_contig_match.query_start = min(read_contig_match.query_coordinates)
+        read_contig_match.query_stop = max(read_contig_match.query_coordinates)
+        read_contig_match.sbjct_start = min(read_contig_match.sbjct_coordinates)
+        read_contig_match.sbjct_stop = max(read_contig_match.sbjct_coordinates)
+        minion_read.hits.append(read_contig_match)
 
     return res_dict
 
 def find_best_hits(res_dict):
 
     for read in res_dict:
-
         hit_dict = {}
         #print res_dict[read].read_name
-
         for hit in res_dict[read].hits:
             #print (hit.query_start, hit.query_stop)
             hit_dict[hit] = range(hit.query_start, hit.query_stop)
-
-
         #print hit_dict
-
         overlap_dict = {}
-
         for hit1 in hit_dict:
             overlap_dict[hit1] = {}
             for hit2 in hit_dict:
@@ -138,37 +119,25 @@ def find_best_hits(res_dict):
                     if hit2 in overlap_dict:
                         if hit1 not in overlap_dict[hit2]:
                             overlap_dict[hit1][hit2] = len(set(hit_dict[hit1]).intersection(hit_dict[hit2]))
-
         #print overlap_dict
         to_delete = []
         if len(overlap_dict) > 1:
-
             for hit1 in overlap_dict:
                 for hit2 in overlap_dict[hit1]:
                     if hit1 != hit2:
                         #print hit1, hit1.match_len, hit2, hit2.match_len, overlap_dict[hit1][hit2]
-
-
-
                         hits = [hit1, hit2]
-
                         for h in hits:
                         #    #print h.match_len, overlap_dict[hit1][hit2] * 0.75
                             #print h.match_len
                             if h.match_len * 0.75 < overlap_dict[hit1][hit2]:
-
                                 if hit1.score < hit2.score:
                                     to_delete.append(hit1)
-
                                 if hit2.score < hit1.score:
                                     to_delete.append(hit2)
-
                                 if hit1.score == hit2.score:
                                     to_delete = []
                                     to_delete.append(hit2)
-
-
-
         #print res_dict[read].hits
         #print 'to delete', to_delete
         for h in to_delete:
@@ -177,7 +146,6 @@ def find_best_hits(res_dict):
                     #print len(res_dict[read].hits)
                     del res_dict[read].hits[i]
                     #print 'left', res_dict[read].read_name, res_dict[read].hits
-
     return res_dict
 
 
@@ -227,17 +195,7 @@ def mapping_stats(res_dict):
         ## this gives the number of aligned reads of each type and the total number of alignments of those reads
         #print each, out_dict[each][1], len(out_dict[each][0])
 
-############################## functions ##############################
 
-if __name__ == '__main__':
-    res_dict = parse_blast_text(blast_format)
-    res_dict = find_best_hits(res_dict)
-    print_res_dict(res_dict)
-
-
-#mapping_stats(res_dict)
-
-#pull_out_mapped_reads(raw, res_dict)
 
 
 

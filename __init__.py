@@ -2,13 +2,20 @@ __author__ = 'flashton'
 
 __version__ = '0.1.0'
 
-class BlastRes:
+class MinionRead:
     def __init__(self):
         self.read_name = str
         self.hits = []
         self.read_len = int
+        self.number_contigs_matched = int
 
-class BlastHit:
+    def calc_num_contigs_matched(self):
+        sbjcts = []
+        for hit in self.hits:
+            sbjcts.append(hit.sbjct)
+        self.number_contigs_matched = len(set(sbjcts))
+
+class ReadContigMatch:
     def __init__(self):
         self.sbjct = int
         self.score = int
@@ -32,16 +39,13 @@ class BlastHit:
 
 
 def print_res_dict(res_dict):
-    """
-
-    :param res_dict:
-    """
     #outhandle = open('/Users/flashton/Dropbox/H58_from_iMac/H58/blast_txt', 'w')
-    print 'query    read len	subject	orientation	score	match len	match pos	match gap	q start	q stop	s start	s stop'
+    print 'query\tnumber of different contigs matched\tread len\tsubject\torientation\tscore\tmatch len\tmatch pos\tmatch ' \
+          'gap\tq start\tq stop\ts start\ts stop'
     for read in res_dict:
-    #print each, res_dict[each]
-    #print res_dict[each].hits
+        res_dict[read].calc_num_contigs_matched()
         for every in res_dict[read].hits:
-            print('%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' % (res_dict[read].read_name, res_dict[read].read_len,
+            print('%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s' % (res_dict[read].read_name, res_dict[read].number_contigs_matched,
+                                                                        res_dict[read].read_len,
                                                                     every.sbjct, every.orientation, every.score, every.match_len, every.match_pos, every.match_gap, every.query_start, every.query_stop, every.sbjct_start, every.sbjct_stop))
     #outhandle.close()

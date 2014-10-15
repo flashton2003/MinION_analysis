@@ -7,7 +7,7 @@ https://github.com/arq5x/poretools
 
 import argparse
 import os
-from __init__ import __version__
+from __init__ import __version__, print_res_dict
 import run_last
 import parse_alignment
 
@@ -27,7 +27,7 @@ def run_command(args):
     if args.command == 'parse_last_output':
         res_dict = parse_alignment.parse_blast_text(args.input_file)
         res_dict = parse_alignment.find_best_hits(res_dict)
-        parse_alignment.print_res_dict(res_dict)
+        print_res_dict(res_dict)
 
 def main():
     parser = argparse.ArgumentParser(prog='minion_analysis', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -37,10 +37,10 @@ def main():
     subparsers = parser.add_subparsers(title='[sub-commands]', dest='command', parser_class=ArgumentParserWithDefaults)
 
     parser_run_last = subparsers.add_parser('run_last', help='Takes MinION reads and maps then to a reference using LAST')
-    parser_run_last.add_argument('reference', metavar='Reference genome (Illumina contigs)\n', help='Assembly of Illumina data '
+    parser_run_last.add_argument('reference', metavar='Reference genome (Illumina contigs)', help='Assembly of Illumina data '
                                                                                                    'from the same organism as the MinION reads')
-    parser_run_last.add_argument('minion_reads', metavar='MinION reads in fasta format\n', help='MinION reads in FASTA format')
-    parser_run_last.add_argument('output_dir', metavar='Directory in which output will be stored\n', help='Where the output of '
+    parser_run_last.add_argument('minion_reads', metavar='MinION reads in fasta format', help='MinION reads in FASTA format')
+    parser_run_last.add_argument('output_dir', metavar='Directory in which output will be stored', help='Where the output of '
                                                                                                          'the LAST alignment and subsequent processing will be stored')
     parser_parse_last_output = subparsers.add_parser('parse_last_output', help='Parses LAST output (in BLAST text format produced by maf-convert) to produce a format useful for scaffolding')
     parser_parse_last_output.add_argument('input_file', metavar='File to which output of minion_analysis run_last was '
