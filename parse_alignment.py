@@ -8,7 +8,6 @@ try:
     import cPickle as pickle
 except:
     import pickle
-
 try:
     import numpy as np
 except ImportError:
@@ -21,11 +20,9 @@ def parse_blast_text(blast_file):
     with open(blast_file) as fi:
         for line in fi.readlines():
             line = line.strip()
-
             if line.startswith('Query='):
                 ## want to refresh sbjct every time there is a new query
                 sbjct = ''
-
                 if read_name != '':
                     #read_contig_match.print_res(blast_res.read_name, blast_res.read_len)
                     read_contig_match.query_start = min(read_contig_match.query_coordinates)
@@ -33,38 +30,30 @@ def parse_blast_text(blast_file):
                     read_contig_match.sbjct_start = min(read_contig_match.sbjct_coordinates)
                     read_contig_match.sbjct_stop = max(read_contig_match.sbjct_coordinates)
                     minion_read.hits.append(read_contig_match)
-
                 read_name = line.split(' ')[-1]
                 minion_read = MinionRead()
                 #print dir(blast_res)
-
                 res_dict[read_name] = minion_read
                 minion_read.read_name = read_name
                 #print blast_res.read_name
-
             if line.startswith('('):
                 read_len = int(line.replace('(', ' ').split(' ')[1])
                 minion_read.read_len = read_len
-
             if line.startswith('>NODE'):
                 if sbjct != '':
-
                     #read_contig_match.print_res(blast_res.read_name, blast_res.read_len)
                     read_contig_match.query_start = min(read_contig_match.query_coordinates)
                     read_contig_match.query_stop = max(read_contig_match.query_coordinates)
                     read_contig_match.sbjct_start = min(read_contig_match.sbjct_coordinates)
                     read_contig_match.sbjct_stop = max(read_contig_match.sbjct_coordinates)
                     minion_read.hits.append(read_contig_match)
-
                 sbjct = line[1:]
                 #print sbjct
                 read_contig_match = ReadContigMatch()
                 read_contig_match.sbjct = sbjct
-
             if line.startswith('Scor'):
                 score = line.split(' ')[-1]
                 read_contig_match.score = int(score)
-
             if line.startswith('Identi'):
                 split_line = line.replace('/', ' ').split(' ')
                 read_contig_match.match_len = int(split_line[3])
@@ -73,26 +62,19 @@ def parse_blast_text(blast_file):
                     read_contig_match.match_gap = int(split_line[7])
                 except IndexError:
                     read_contig_match.match_gap = 0
-
             if line.startswith('Query:'):
                 split_line = line.split()
-
                 read_contig_match.query_coordinates.append(int(split_line[1]))
                 read_contig_match.query_coordinates.append(int(split_line[3]))
-
             if line.startswith('Sbjct:'):
                 split_line = line.split()
                 read_contig_match.sbjct_coordinates.append(int(split_line[1]))
                 read_contig_match.sbjct_coordinates.append(int(split_line[3]))
-
             if line.startswith('Strand'):
                 split_line = line.split()
                 to_join = [split_line[2], split_line[4]]
                 ori = '/'.join(to_join)
                 read_contig_match.orientation = ori
-
-
-
         #read_contig_match.print_res(blast_res.read_name, blast_res.read_len)
         read_contig_match.query_start = min(read_contig_match.query_coordinates)
         read_contig_match.query_stop = max(read_contig_match.query_coordinates)
@@ -185,37 +167,23 @@ def mapping_stats(res_dict):
         total_len_aligned += out_dict[each]['iLengthAligned']
 
     number_alignments = len(total_gap)
-
-    print 'total', '\t', total_number_reads, '\t', number_alignments, '\t', total_len_aligned, '\t', np.mean(np.array(total_acc)), '\t', np.mean(np.array(total_gap))
+    print 'read type\t' + 'Number aligned reads\t' + 'number_alignments\t' +  'length_aligned\t' + 'Mean accuracy\t' + \
+          'Mean gap'
+    print 'total' + '\t' + str(total_number_reads) + '\t' + str(number_alignments) + '\t' + str(total_len_aligned) + '\t' + \
+        str(np.mean(np.array(total_acc))) + '\t' + str(np.mean(np.array(total_gap)))
 
     ## this code breaks down the results by type
+
     for each in out_dict:
         ## this gives the number of aligned reads, total number of alignments, mean accuracy of reads broken down by read type
-        print each, '\t', out_dict[each]['iNumAligned'], '\t', len(out_dict[each]['lAccuracy']), '\t', out_dict[each]['iLengthAligned'], '\t', np.mean(np.array(out_dict[each]['lAccuracy'])), '\t', np.mean(np.array(out_dict[each]['lGaps']))
+        print each + '\t' + str(out_dict[each]['iNumAligned']) + '\t' + str(len(out_dict[each]['lAccuracy'])) + '\t' + \
+                                                                           str(out_dict[each][
+            'iLengthAligned']) + '\t' + str(np.mean(np.array(out_dict[each]['lAccuracy']))) + '\t' + str(np.mean(np.array(
+            out_dict[
+            each][
+            'lGaps'])))
         ## this gives the number of aligned reads of each type and the total number of alignments of those reads
         #print each, out_dict[each][1], len(out_dict[each][0])
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

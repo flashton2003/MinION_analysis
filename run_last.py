@@ -14,9 +14,10 @@ def run_last(reference, query, outdir):
     os.system('lastdb -Q 0 %s.lastindex %s' % (reference_path, reference))
     print '### LAST is aligning the query against the reference ###'
     os.system('lastal -s 2 -T 0 -Q 0 -a 1 %s.lastindex %s > %s/%s_vs_%s.last.txt' % (reference_path, query, outdir,
-     query_name, reference_name))
+    query_name, reference_name))
     print '### converting the last format to blast format using maf-convert.py ###'
     os.system('maf-convert.py blast %s/%s_vs_%s.last.txt > %s/%s_vs_%s.blast.txt' % (outdir, query_name, reference_name, outdir,
                                                                                    query_name, reference_name))
-
-
+    os.system('maf-convert.py sam %s/%s_vs_%s.last.txt > %s/%s_vs_%s.sam' % (outdir, query_name, reference_name, outdir, query_name, reference_name))
+    os.system('samtools view -T %s -bS %s/%s_vs_%s.sam | samtools sort - %s/%s_vs_%s.sorted' % (reference, outdir, query_name, reference_name, outdir, query_name, reference_name))
+    os.system('samtools index %s/%s_vs_%s.sorted.bam' % (outdir, query_name, reference_name))
