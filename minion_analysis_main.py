@@ -33,7 +33,7 @@ def run_command(args):
         print_res_dict(res_dict)
 
     if args.command == 'error_profile':
-        # error_analysis.make_pileup(args.reference, args.input_file)
+        error_analysis.make_pileup(args.reference, args.input_file)
         deleted_kmers = error_analysis.error_profile(args.input_file)
         ref_kmers = error_analysis.find_kmer_freq(args.reference)
         error_analysis.compare_kmers(deleted_kmers, ref_kmers)

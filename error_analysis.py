@@ -6,7 +6,6 @@ from Bio import SeqIO
 import re
 import os
 
-
 def make_pileup(reference, input_file):
     print 'Running mpileup'
     path_and_filename = os.path.splitext(os.path.splitext(input_file)[0])[0]
@@ -23,7 +22,6 @@ def error_profile(input_file):
             #m = re.search('\-', read_bases)
             m = re.search('-([0-9]+)+([ACGTNacgtn]+)+', read_bases)
             if m:
-
                 if len(m.groups()[1]) != int(m.groups()[0]):
                     deleted_sections.append(m.groups()[1][:int(len(m.groups()[0]))])
                 else:
