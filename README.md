@@ -9,7 +9,7 @@ There are three commands:
   
   parse_last_output - parses the LAST alignment which has been converted to BLAST format file produced by maf-convert.py and outputs a tab delimited file
   
-  error_profile - takes the pileup produced by run_last and produces insertion and deleteion output files with z-scores to identify more frequent than average errors. also counts the substitution errors.
+  error_profile - takes the pileup produced by run_last and produces insertion and deleteion output files with z-scores to identify more frequent than average errors. It normalises deletions by the occurance of that kmer in the reference genome (for kmers of length 1 to 6). It also counts the substitution errors.
   
 The example data presented here (specifically the Illumina assembly) was produced using SPAdes v.2.5.1 and is not the final assembly in the associated paper (need to insert reference to paper).
   
