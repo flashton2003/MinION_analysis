@@ -4,7 +4,6 @@ __author__ = 'flashton'
 
 from Bio import SeqIO
 import re
-import os
 import numpy as np
 
 
@@ -18,35 +17,32 @@ def find_indels(pileup):
             m = re.findall('-([0-9]+)+([ACGTNacgtn]+)+', read_bases)
             if m:
                 for each in m:
+                    ## if there is a substitution after the indel, this regular expression will include it. this if statement
+                    ## checks that the length of the nucleotide string matches the integer.
                     if len(each[1]) != int(each[0]):
                         deleted_sections.append(each[1][:int(len(each[0]))])
                     else:
-                        #print line
-                        #print m.groups()
-                        #print m.groups()[1][:int(len(m.groups()[0]))]
                         deleted_sections.append(each[1])
-
+            ## same for insertions
             n = re.findall('\+([0-9]+)+([ACGTNacgtn]+)+', read_bases)
             if n:
                 for each in n:
                     if len(each[1]) != int(each[0]):
                         inserted_sections.append(each[1][:int(len(each[0]))])
                     else:
-                        #print line
-                        #print m.groups()
-                        #print m.groups()[1][:int(len(m.groups()[0]))]
                         inserted_sections.append(each[1])
 
     ## commented out the histogram printing as not very interesting, but wanted to leave it in just in case
-
     #histogram_of_error_length(deleted_sections, 'deleted')
     #histogram_of_error_length(inserted_sections, 'inserted')
+
 
     for i, each in enumerate(deleted_sections):
         deleted_sections[i] = each.upper()
     for i, each in enumerate(inserted_sections):
         inserted_sections[i] = each.upper()
 
+    ## basically just default dict on deletion/insertion lists.
     sorted_deletion = common_error_profiles(deleted_sections)
     sorted_insertion = common_error_profiles(inserted_sections)
     return sorted_deletion, sorted_insertion
@@ -67,7 +63,7 @@ def common_error_profiles(error_list):
 
 def find_kmer_freq(reference):
     '''
-    This is quick but scales badly (runs out of ram)
+    This is quick but scales badly with increasing k mer range (runs out of ram)
     '''
     kmers = range(1, 7)
     res_dict = {}
@@ -75,19 +71,14 @@ def find_kmer_freq(reference):
         for each_contig in SeqIO.parse(reference, 'fasta'):
             i = 0
             each_contig = str(each_contig.seq)
-            #print range(len(each_contig) - kmer)[kmer:]
             for x in range(len(each_contig) - kmer)[kmer:]:
-                #print i, x
                 seq = each_contig[i:x]
-                #print seq
                 if seq in res_dict:
                     res_dict[seq] += 1
                 else:
                     res_dict[seq] = 1
                 i += 1
     return res_dict
-        # for each in res_dict:
-        #     print each, res_dict[each]
 
 
 def slow_find_kmer_freq(reference, error_kmers):
@@ -195,10 +186,15 @@ def find_substitutions(pileup):
             split_line = line.split('\t')
             ref_base = split_line[2]
             read_bases = split_line[4]
+            ## substitutions are all the characters (ATCG) in the 4th column of the pileup that aren't indels.
+            ## first, check if there is an indel in the 4th column
             m = re.findall('([-+][0-9]+)+([ACGTNacgtn]+)+', read_bases)
             if m:
                 for each in m:
+                    ## if there is, remove that indel from the 4th column
                     if len(each[1]) != int(each[0][1:]):
+                        ## however, need to check that there isn't a substitution next to the indel, so count the nucleotide
+                        ## string and check is equivalent to the integer following the +/-
                         cor_str =  each[1][:int(each[0][1:])]
                         e = ''.join([each[0], cor_str])
                         read_bases = read_bases.replace(e, '')
@@ -210,6 +206,7 @@ def find_substitutions(pileup):
                     if b in ['A', 'C', 'T', 'G']:
                         res_dict[ref_base][b] += 1
             else:
+                ## if there is no indel, can do a simple count of nucleotide characters
                 read_bases = read_bases.upper()
                 for b in read_bases:
                     if b in ['A', 'C', 'T', 'G']:
