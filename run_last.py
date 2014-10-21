@@ -21,3 +21,9 @@ def run_last(reference, query, outdir):
     os.system('maf-convert.py sam %s/%s_vs_%s.last.txt > %s/%s_vs_%s.sam' % (outdir, query_name, reference_name, outdir, query_name, reference_name))
     os.system('samtools view -T %s -bS %s/%s_vs_%s.sam | samtools sort - %s/%s_vs_%s.sorted' % (reference, outdir, query_name, reference_name, outdir, query_name, reference_name))
     os.system('samtools index %s/%s_vs_%s.sorted.bam' % (outdir, query_name, reference_name))
+    return '%s/%s_vs_%s.sorted.bam' % (outdir, query_name, reference_name)
+
+def make_pileup(reference, input_file):
+    print 'Running mpileup'
+    path_and_filename = os.path.splitext(os.path.splitext(input_file)[0])[0]
+    os.system('samtools mpileup -BQ0 -f %s %s > %s.pileup' % (reference, input_file, path_and_filename))

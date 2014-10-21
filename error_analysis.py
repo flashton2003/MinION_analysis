@@ -7,14 +7,8 @@ import re
 import os
 import numpy as np
 
-def make_pileup(reference, input_file):
-    print 'Running mpileup'
-    path_and_filename = os.path.splitext(os.path.splitext(input_file)[0])[0]
-    os.system('samtools mpileup -BQ0 -f %s %s > %s.pileup' % (reference, input_file, path_and_filename))
 
-
-def error_profile(input_file):
-    pileup = '{0}.pileup'.format(os.path.splitext(os.path.splitext(input_file)[0])[0])
+def find_indels(pileup):
     deleted_sections = []
     inserted_sections = []
     with open(pileup) as fi:
@@ -52,6 +46,7 @@ def error_profile(input_file):
         deleted_sections[i] = each.upper()
     for i, each in enumerate(inserted_sections):
         inserted_sections[i] = each.upper()
+
     sorted_deletion = common_error_profiles(deleted_sections)
     sorted_insertion = common_error_profiles(inserted_sections)
     return sorted_deletion, sorted_insertion
@@ -111,14 +106,16 @@ def slow_find_kmer_freq(reference, error_kmers):
     return res_dict
 
 
-def compare_err_and_ref_kmers(deleted_kmers, typhi_kmers):
-    error_proportion_by_kmer = {}
+def characterise_deletions(deleted_kmers, typhi_kmers, output_dir):
     # iupac = ['R', 'Y', 'S', 'W', 'K', 'M', 'B', 'D', 'H', 'V', 'N']
+    ## normalise the deleted kmers by the occurance of that kmer in the reference genome
+    error_proportion_by_kmer = {}
     for each in typhi_kmers:
         if each in deleted_kmers:
             error_proportion = deleted_kmers[each] / typhi_kmers[each]
             error_proportion_by_kmer[each] = error_proportion
 
+    ## group the normalised deletion occurences by kmer length
     error_proportion_by_k_len = {}
     for kmer in error_proportion_by_kmer:
         if len(kmer) in error_proportion_by_k_len:
@@ -127,7 +124,8 @@ def compare_err_and_ref_kmers(deleted_kmers, typhi_kmers):
             error_proportion_by_k_len[len(kmer)] = []
             error_proportion_by_k_len[len(kmer)].append(error_proportion_by_kmer[kmer])
 
-
+    ## calculate the per-k-length mean and stdev of the deletion proportion, for comparison against each k-mer to allow calc
+    ## of z-score
     mean_stdev_error_proportion_by_k_len = {}
     for each in error_proportion_by_k_len:
         a = np.array(error_proportion_by_k_len[each])
@@ -136,14 +134,15 @@ def compare_err_and_ref_kmers(deleted_kmers, typhi_kmers):
         mean_stdev_error_proportion_by_k_len[each].append(np.std(a))
 
 
-    with open('/Users/flashton/missing_20_mers.txt', 'w') as fo:
+    with open('%s/deleted_kmers.txt' % (output_dir), 'w') as fo:
+        fo.write('kmer\tkmer_length\tnumber_in_reference\tnumber_of_deletions\tdeletions_normalised_by_reference\tz-score\n')
         for each in error_proportion_by_kmer:
             fo.write(each + '\t' + str(len(each)) + '\t' + str(typhi_kmers[each]) + '\t' + str(deleted_kmers[each]) + \
                             '\t' + str(error_proportion_by_kmer[each]) + '\t' + str((error_proportion_by_kmer[each] - mean_stdev_error_proportion_by_k_len[len(each)][0]) /
                                                                mean_stdev_error_proportion_by_k_len[len(each)][1]) + '\n')
 
 
-def analyse_insertions(inserted_kmers):
+def analyse_insertions(inserted_kmers, output_dir):
 
     sorted_by_k_len = {}
     for kmer in inserted_kmers:
@@ -161,19 +160,19 @@ def analyse_insertions(inserted_kmers):
         mean_stdev_error_proportion_by_k_len[each].append(np.mean(a))
         mean_stdev_error_proportion_by_k_len[each].append(np.std(a))
 
-    with open('/Users/flashton/inserted_kmers.txt', 'w') as fo:
+    with open('%s/inserted_kmers.txt' % (output_dir), 'w') as fo:
         for each in inserted_kmers:
             fo.write(str(each) + '\t' + str(len(each)) + '\t' + str(inserted_kmers[each]) + '\t' + str((inserted_kmers[each] -
                                                                                                         mean_stdev_error_proportion_by_k_len[len(each)][0]) / mean_stdev_error_proportion_by_k_len[len(each)][1]) + '\n')
 
 
-def total_len_error(erroneous_kmers):
+def total_len_error(erroneous_kmers, error_type):
     total = 0
     l = []
     for each in erroneous_kmers:
         l.append(len(each))
         total += len(each) * erroneous_kmers[each]
-    print total
+    print error_type + '\t' + str(total)
 
 
 def histogram_of_error_length(erroneous_kmers, name):
@@ -189,8 +188,7 @@ def histogram_of_error_length(erroneous_kmers, name):
     print np.mean(a)
 
 
-def find_substitutions(input_file):
-    pileup = '{0}.pileup'.format(os.path.splitext(os.path.splitext(input_file)[0])[0])
+def find_substitutions(pileup):
     res_dict = {'A':{'T':0, 'C':0, 'G':0}, 'T':{'A':0, 'C':0, 'G':0}, 'C':{'A':0, 'T':0, 'G':0}, 'G':{'A':0, 'T':0, 'C':0}}
     with open(pileup) as fi:
         for line in fi:
@@ -199,22 +197,14 @@ def find_substitutions(input_file):
             read_bases = split_line[4]
             m = re.findall('([-+][0-9]+)+([ACGTNacgtn]+)+', read_bases)
             if m:
-                #print line
-                #print m
                 for each in m:
                     if len(each[1]) != int(each[0][1:]):
-                        #res_dict[ref_base][]
                         cor_str =  each[1][:int(each[0][1:])]
                         e = ''.join([each[0], cor_str])
                         read_bases = read_bases.replace(e, '')
                     else:
                         e = ''.join([each[0], each[1]])
                         read_bases = read_bases.replace(e, '')
-                        #print line
-                        #print m.groups()
-                        #print m.groups()[1][:int(len(m.groups()[0]))]
-                #print line
-                #print read_bases
                 read_bases = read_bases.upper()
                 for b in read_bases:
                     if b in ['A', 'C', 'T', 'G']:
@@ -224,5 +214,5 @@ def find_substitutions(input_file):
                 for b in read_bases:
                     if b in ['A', 'C', 'T', 'G']:
                         res_dict[ref_base][b] += 1
-
+    print 'Substitutions {ref_base:{changed_to:frequency}}'
     print res_dict

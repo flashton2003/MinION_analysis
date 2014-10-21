@@ -24,7 +24,8 @@ def run_command(args):
             pass
         else:
             os.makedirs(args.output_dir)
-        run_last.run_last(args.reference, args.minion_reads, args.output_dir)
+        sorted_bam_path = run_last.run_last(args.reference, args.minion_reads, args.output_dir)
+        run_last.make_pileup(args.reference, sorted_bam_path)
 
     if args.command == 'parse_last_output':
         res_dict = parse_alignment.parse_blast_text(args.input_file)
@@ -33,14 +34,13 @@ def run_command(args):
         print_res_dict(res_dict)
 
     if args.command == 'error_profile':
-        #error_analysis.make_pileup(args.reference, args.input_file)
-        #deleted_kmers, inserted_kmers = error_analysis.error_profile(args.input_file)
-        #ref_kmers = error_analysis.find_kmer_freq(args.reference)
+        deleted_kmers, inserted_kmers = error_analysis.find_indels(args.input_file)
+        ref_kmers = error_analysis.find_kmer_freq(args.reference)
         #ref_kmers = error_analysis.slow_find_kmer_freq(args.reference, deleted_kmers)
-        #error_analysis.compare_err_and_ref_kmers(deleted_kmers, ref_kmers)
-        #error_analysis.analyse_insertions(inserted_kmers)
-        #error_analysis.total_len_error(deleted_kmers)
-        #error_analysis.total_len_error(inserted_kmers)
+        error_analysis.characterise_deletions(deleted_kmers, ref_kmers, args.output_dir)
+        error_analysis.analyse_insertions(inserted_kmers, args.output_dir)
+        error_analysis.total_len_error(deleted_kmers, 'deleted_kmers')
+        error_analysis.total_len_error(inserted_kmers, 'inserted_kmers')
         error_analysis.find_substitutions(args.input_file)
 
 
@@ -48,7 +48,6 @@ def main():
     parser = argparse.ArgumentParser(prog='minion_analysis', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument("-v", "--version", help="Installed minion_analysis version", action="version",
                         version="%(prog)s " + str(__version__))
-
     subparsers = parser.add_subparsers(title='[sub-commands]', dest='command', parser_class=ArgumentParserWithDefaults)
 
     parser_run_last = subparsers.add_parser('run_last', help='Takes MinION reads and maps then to a reference using LAST')
@@ -56,17 +55,15 @@ def main():
     parser_run_last.add_argument('minion_reads', help='MinION reads in FASTA format')
     parser_run_last.add_argument('output_dir', help='Where the output of the LAST alignment and subsequent processing '
                                                     'will be stored')
-
     parser_parse_last_output = subparsers.add_parser('parse_last_output', help='Parses LAST output (in BLAST text format '
                                                                                'produced by maf-convert) to produce a format '
                                                                                'useful for scaffolding')
     parser_parse_last_output.add_argument('input_file', help='The BLAST text (*.blast.txt) formatted LAST output (will be in '
                                                              'the output directory you passed to run_last')
-
-    parser_error_profile = subparsers.add_parser('error_profile', help='Converts LAST output to pileup, identifies different '
-                                                                       'error types (indel, miscalled bases)')
-    parser_error_profile.add_argument('input_file', help='sorted bam of the LAST alignment')
+    parser_error_profile = subparsers.add_parser('error_profile', help='Pass this the pileup output of run_last')
+    parser_error_profile.add_argument('input_file', help='Samtools pileup of LAST alignment')
     parser_error_profile.add_argument('reference', help='Reference genome that was aligned to')
+    parser_error_profile.add_argument('output_dir', help='Directory to which error output is written')
 
     args = parser.parse_args()
     run_command(args)
