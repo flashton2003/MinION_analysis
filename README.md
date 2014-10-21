@@ -7,6 +7,8 @@ There are two commands
   run_last - aligns a set of Nanopore reads in a fasta file against a reference genome (typically, an illumina assembly of the same isolate), converts the last output into BLAST format using maf-convert.py (bundled with LAST)
   parse_last_output - parses the LAST alignment which has been converted to BLAST format file produced by maf-convert.py and outputs a tab delimited file
   
+The example data presented here (specifically the Illumina assembly) was produced using SPAdes v.2.5.1 and is not the final assembly in the associated paper (need to insert reference to paper).
+  
 
 Output of parse_last_output
 ==============================
