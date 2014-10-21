@@ -3,9 +3,13 @@ MinION_analysis
 
 Useage: python minion_analysis_main.py -h
 
-There are two commands
-  run_last - aligns a set of Nanopore reads in a fasta file against a reference genome (typically, an illumina assembly of the same isolate), converts the last output into BLAST format using maf-convert.py (bundled with LAST)
+There are three commands:
+  
+  run_last - aligns a set of Nanopore reads in a fasta file against a reference genome (typically, an illumina assembly of the same isolate), converts the last output into BLAST format using maf-convert.py (bundled with LAST). Produces a pileup of the alignment for error parsing
+  
   parse_last_output - parses the LAST alignment which has been converted to BLAST format file produced by maf-convert.py and outputs a tab delimited file
+  
+  error_profile - takes the pileup produced by run_last and produces insertion and deleteion output files with z-scores to identify more frequent than average errors. also counts the substitution errors.
   
 The example data presented here (specifically the Illumina assembly) was produced using SPAdes v.2.5.1 and is not the final assembly in the associated paper (need to insert reference to paper).
   
