@@ -2,9 +2,6 @@ __author__ = 'flashton'
 
 import os
 
-# reference = '/Users/flashton/Dropbox/H58_minion/data/refs/ST2_contigs'
-# query = '/Users/flashton/Dropbox/H58_minion/data/H566_ON/2014.08.11.H566_ON_both.fasta'
-# outhandle = '/Users/flashton/Dropbox/H58_minion/results/H566_ON/2014.08.11.H566_ON_both_vs_ST2_contigs'
 
 def run_last(reference, query, outdir):
     reference_path = os.path.splitext(reference)[0]
