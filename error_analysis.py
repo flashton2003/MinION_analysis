@@ -5,53 +5,61 @@ __author__ = 'flashton'
 from Bio import SeqIO
 import re
 import os
+import numpy as np
 
 def make_pileup(reference, input_file):
     print 'Running mpileup'
     path_and_filename = os.path.splitext(os.path.splitext(input_file)[0])[0]
     os.system('samtools mpileup -BQ0 -f %s %s > %s.pileup' % (reference, input_file, path_and_filename))
 
+
 def error_profile(input_file):
     pileup = '{0}.pileup'.format(os.path.splitext(os.path.splitext(input_file)[0])[0])
     deleted_sections = []
     inserted_sections = []
     with open(pileup) as fi:
-        for line in fi.readlines():
+        for line in fi:
             split_line = line.split('\t')
             read_bases = split_line[4]
-            #m = re.search('\-', read_bases)
-            m = re.search('-([0-9]+)+([ACGTNacgtn]+)+', read_bases)
+            m = re.findall('-([0-9]+)+([ACGTNacgtn]+)+', read_bases)
             if m:
-                if len(m.groups()[1]) != int(m.groups()[0]):
-                    deleted_sections.append(m.groups()[1][:int(len(m.groups()[0]))])
-                else:
-                    #print line
-                    #print m.groups()
-                    #print m.groups()[1][:int(len(m.groups()[0]))]
-                    deleted_sections.append(m.groups()[1])
+                for each in m:
+                    if len(each[1]) != int(each[0]):
+                        deleted_sections.append(each[1][:int(len(each[0]))])
+                    else:
+                        #print line
+                        #print m.groups()
+                        #print m.groups()[1][:int(len(m.groups()[0]))]
+                        deleted_sections.append(each[1])
 
-            # n = re.search('\+', read_bases)
-            # if n:
-            #     split_read_bases = list(read_bases)
-            #     indicies = [i for i, x in enumerate(split_read_bases) if x == '+']
-            #     for i in indicies:
-            #         ins_len = int(split_read_bases[i + 1])
-            #         #print del_len
-            #         start = i + 2
-            #         stop = i + 2 + ins_len
-            #         inserted_section = split_read_bases[start:stop]
-            #         inserted_sections.append(''.join(inserted_section))
+            n = re.findall('\+([0-9]+)+([ACGTNacgtn]+)+', read_bases)
+            if n:
+                for each in n:
+                    if len(each[1]) != int(each[0]):
+                        inserted_sections.append(each[1][:int(len(each[0]))])
+                    else:
+                        #print line
+                        #print m.groups()
+                        #print m.groups()[1][:int(len(m.groups()[0]))]
+                        inserted_sections.append(each[1])
+
+    ## commented out the histogram printing as not very interesting, but wanted to leave it in just in case
+
+    #histogram_of_error_length(deleted_sections, 'deleted')
+    #histogram_of_error_length(inserted_sections, 'inserted')
+
     for i, each in enumerate(deleted_sections):
         deleted_sections[i] = each.upper()
-    #print len(deleted_sections)
+    for i, each in enumerate(inserted_sections):
+        inserted_sections[i] = each.upper()
     sorted_deletion = common_error_profiles(deleted_sections)
-    #print len(inserted_sections)
-    # sorted_insertion = common_error_profiles(inserted_sections)
-    return sorted_deletion
+    sorted_insertion = common_error_profiles(inserted_sections)
+    return sorted_deletion, sorted_insertion
 
-def common_error_profiles(deleted_sections):
+
+def common_error_profiles(error_list):
     res_dict = {}
-    for each in deleted_sections:
+    for each in error_list:
         if each in res_dict:
             res_dict[each] += 1
         else:
@@ -61,8 +69,12 @@ def common_error_profiles(deleted_sections):
     # for each in sorted_res:
     #     print each[0], '\t', each[1]
 
+
 def find_kmer_freq(reference):
-    kmers = range(1, 21)
+    '''
+    This is quick but scales badly (runs out of ram)
+    '''
+    kmers = range(1, 7)
     res_dict = {}
     for kmer in kmers:
         for each_contig in SeqIO.parse(reference, 'fasta'):
@@ -82,20 +94,135 @@ def find_kmer_freq(reference):
         # for each in res_dict:
         #     print each, res_dict[each]
 
-def compare_kmers(error_kmers, typhi_kmers):
+
+def slow_find_kmer_freq(reference, error_kmers):
+    '''
+    This is slow but has scale
+    '''
     res_dict = {}
-    iupac = ['R', 'Y', 'S', 'W', 'K', 'M', 'B', 'D', 'H', 'V', 'N']
+    for kmer in error_kmers:
+        for each_contig in SeqIO.parse(reference, 'fasta'):
+            each_contig = str(each_contig.seq)
+            m = re.findall(kmer, each_contig)
+            if kmer in res_dict:
+                res_dict[kmer] += len(m)
+            else:
+                res_dict[kmer] = len(m)
+    return res_dict
+
+
+def compare_err_and_ref_kmers(deleted_kmers, typhi_kmers):
+    error_proportion_by_kmer = {}
+    # iupac = ['R', 'Y', 'S', 'W', 'K', 'M', 'B', 'D', 'H', 'V', 'N']
     for each in typhi_kmers:
-        if each in error_kmers:
-            error_proportion = error_kmers[each] / typhi_kmers[each]
-            res_dict[each] = error_proportion
-    total = 0
+        if each in deleted_kmers:
+            error_proportion = deleted_kmers[each] / typhi_kmers[each]
+            error_proportion_by_kmer[each] = error_proportion
+
+    error_proportion_by_k_len = {}
+    for kmer in error_proportion_by_kmer:
+        if len(kmer) in error_proportion_by_k_len:
+            error_proportion_by_k_len[len(kmer)].append(error_proportion_by_kmer[kmer])
+        else:
+            error_proportion_by_k_len[len(kmer)] = []
+            error_proportion_by_k_len[len(kmer)].append(error_proportion_by_kmer[kmer])
+
+
+    mean_stdev_error_proportion_by_k_len = {}
+    for each in error_proportion_by_k_len:
+        a = np.array(error_proportion_by_k_len[each])
+        mean_stdev_error_proportion_by_k_len[each] = []
+        mean_stdev_error_proportion_by_k_len[each].append(np.mean(a))
+        mean_stdev_error_proportion_by_k_len[each].append(np.std(a))
+
+
     with open('/Users/flashton/missing_20_mers.txt', 'w') as fo:
-        for each in res_dict:
-        # if any(x in each for x in iupac):
-        #     pass
-        # else:
-            total += len(each) * error_kmers[each]
-            fo.write(each + '\t' + str(len(each)) + '\t' + str(typhi_kmers[each]) + '\t' + str(error_kmers[each]) + \
-                            '\t' + str(res_dict[each]) + '\n')
+        for each in error_proportion_by_kmer:
+            fo.write(each + '\t' + str(len(each)) + '\t' + str(typhi_kmers[each]) + '\t' + str(deleted_kmers[each]) + \
+                            '\t' + str(error_proportion_by_kmer[each]) + '\t' + str((error_proportion_by_kmer[each] - mean_stdev_error_proportion_by_k_len[len(each)][0]) /
+                                                               mean_stdev_error_proportion_by_k_len[len(each)][1]) + '\n')
+
+
+def analyse_insertions(inserted_kmers):
+
+    sorted_by_k_len = {}
+    for kmer in inserted_kmers:
+        if len(kmer) in sorted_by_k_len:
+            sorted_by_k_len[len(kmer)].append(inserted_kmers[kmer])
+        else:
+            sorted_by_k_len[len(kmer)] = []
+            sorted_by_k_len[len(kmer)].append(inserted_kmers[kmer])
+
+    mean_stdev_error_proportion_by_k_len = {}
+
+    for each in sorted_by_k_len:
+        a = np.array(sorted_by_k_len[each])
+        mean_stdev_error_proportion_by_k_len[each] = []
+        mean_stdev_error_proportion_by_k_len[each].append(np.mean(a))
+        mean_stdev_error_proportion_by_k_len[each].append(np.std(a))
+
+    with open('/Users/flashton/inserted_kmers.txt', 'w') as fo:
+        for each in inserted_kmers:
+            fo.write(str(each) + '\t' + str(len(each)) + '\t' + str(inserted_kmers[each]) + '\t' + str((inserted_kmers[each] -
+                                                                                                        mean_stdev_error_proportion_by_k_len[len(each)][0]) / mean_stdev_error_proportion_by_k_len[len(each)][1]) + '\n')
+
+
+def total_len_error(erroneous_kmers):
+    total = 0
+    l = []
+    for each in erroneous_kmers:
+        l.append(len(each))
+        total += len(each) * erroneous_kmers[each]
     print total
+
+
+def histogram_of_error_length(erroneous_kmers, name):
+    error_lengths = []
+    for x in erroneous_kmers:
+        error_lengths.append(len(x))
+    hist, bins = np.histogram(error_lengths, bins = range(0, max(error_lengths)))
+    print '=' * 20
+    #for x, y in zip(hist, bins):
+    #    print x, y
+    a = np.array(error_lengths)
+    print np.median(a)
+    print np.mean(a)
+
+
+def find_substitutions(input_file):
+    pileup = '{0}.pileup'.format(os.path.splitext(os.path.splitext(input_file)[0])[0])
+    res_dict = {'A':{'T':0, 'C':0, 'G':0}, 'T':{'A':0, 'C':0, 'G':0}, 'C':{'A':0, 'T':0, 'G':0}, 'G':{'A':0, 'T':0, 'C':0}}
+    with open(pileup) as fi:
+        for line in fi:
+            split_line = line.split('\t')
+            ref_base = split_line[2]
+            read_bases = split_line[4]
+            m = re.findall('([-+][0-9]+)+([ACGTNacgtn]+)+', read_bases)
+            if m:
+                #print line
+                #print m
+                for each in m:
+                    if len(each[1]) != int(each[0][1:]):
+                        #res_dict[ref_base][]
+                        cor_str =  each[1][:int(each[0][1:])]
+                        e = ''.join([each[0], cor_str])
+                        read_bases = read_bases.replace(e, '')
+                    else:
+                        e = ''.join([each[0], each[1]])
+                        read_bases = read_bases.replace(e, '')
+                        #print line
+                        #print m.groups()
+                        #print m.groups()[1][:int(len(m.groups()[0]))]
+                #print line
+                #print read_bases
+                read_bases = read_bases.upper()
+                for b in read_bases:
+                    if b in ['A', 'C', 'T', 'G']:
+                        res_dict[ref_base][b] += 1
+            else:
+                read_bases = read_bases.upper()
+                for b in read_bases:
+                    if b in ['A', 'C', 'T', 'G']:
+                        res_dict[ref_base][b] += 1
+
+    print res_dict

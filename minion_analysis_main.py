@@ -29,14 +29,19 @@ def run_command(args):
     if args.command == 'parse_last_output':
         res_dict = parse_alignment.parse_blast_text(args.input_file)
         res_dict = parse_alignment.find_best_hits(res_dict)
-        parse_alignment.mapping_stats(res_dict)
+        #parse_alignment.mapping_stats(res_dict)
         print_res_dict(res_dict)
 
     if args.command == 'error_profile':
-        error_analysis.make_pileup(args.reference, args.input_file)
-        deleted_kmers = error_analysis.error_profile(args.input_file)
-        ref_kmers = error_analysis.find_kmer_freq(args.reference)
-        error_analysis.compare_kmers(deleted_kmers, ref_kmers)
+        #error_analysis.make_pileup(args.reference, args.input_file)
+        #deleted_kmers, inserted_kmers = error_analysis.error_profile(args.input_file)
+        #ref_kmers = error_analysis.find_kmer_freq(args.reference)
+        #ref_kmers = error_analysis.slow_find_kmer_freq(args.reference, deleted_kmers)
+        #error_analysis.compare_err_and_ref_kmers(deleted_kmers, ref_kmers)
+        #error_analysis.analyse_insertions(inserted_kmers)
+        #error_analysis.total_len_error(deleted_kmers)
+        #error_analysis.total_len_error(inserted_kmers)
+        error_analysis.find_substitutions(args.input_file)
 
 
 def main():
