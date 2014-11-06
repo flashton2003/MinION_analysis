@@ -60,6 +60,8 @@ def main():
                                                                                'useful for scaffolding')
     parser_parse_last_output.add_argument('input_file', help='The BLAST text (*.blast.txt) formatted LAST output (will be in '
                                                              'the output directory you passed to run_last')
+
+
     parser_error_profile = subparsers.add_parser('error_profile', help='Pass this the pileup output of run_last')
     parser_error_profile.add_argument('input_file', help='Samtools pileup of LAST alignment')
     parser_error_profile.add_argument('reference', help='Reference genome that was aligned to')

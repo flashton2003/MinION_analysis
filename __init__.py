@@ -39,14 +39,13 @@ class ReadContigMatch:
 
 
 def print_res_dict(res_dict):
-    #outhandle = open('/Users/flashton/Dropbox/H58_from_iMac/H58/blast_txt', 'w')
-    with open('/Users/flashton/all_scaffold.txt', 'w') as fo:
-        fo.write('query\tnumber of different contigs matched\tread len\tsubject\torientation\tscore\tmatch len\tmatch pos\tmatch ' \
-              'gap\tq start\tq stop\ts start\ts stop\n')
-        for read in res_dict:
-            res_dict[read].calc_num_contigs_matched()
-            for every in res_dict[read].hits:
-                fo.write('%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' % (res_dict[read].read_name, res_dict[read].number_contigs_matched,
-                                                                            res_dict[read].read_len,
+    print('query\tnumber of different contigs matched\tread len\tsubject\torientation\tscore\tmatch len\tmatch pos\tmatch ' \
+            'gap\tq start\tq stop\ts start\ts stop\n')
+    for read in res_dict:
+        res_dict[read].calc_num_contigs_matched()
+        for every in res_dict[read].hits:
+            print('%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' % (res_dict[read].read_name,
+                                                                        res_dict[read].number_contigs_matched,
+                                                                        res_dict[read].read_len,
                                                                         every.sbjct, every.orientation, every.score, every.match_len, every.match_pos, every.match_gap, every.query_start, every.query_stop, every.sbjct_start, every.sbjct_stop))
     #outhandle.close()
