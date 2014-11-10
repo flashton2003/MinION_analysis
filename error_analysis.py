@@ -5,6 +5,7 @@ __author__ = 'flashton'
 from Bio import SeqIO
 import re
 import numpy as np
+import os
 
 
 def find_indels(pileup):
@@ -124,6 +125,8 @@ def characterise_deletions(deleted_kmers, typhi_kmers, output_dir):
         mean_stdev_error_proportion_by_k_len[each].append(np.mean(a))
         mean_stdev_error_proportion_by_k_len[each].append(np.std(a))
 
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
 
     with open('%s/deleted_kmers.txt' % (output_dir), 'w') as fo:
         fo.write('kmer\tkmer_length\tnumber_in_reference\tnumber_of_deletions\tdeletions_normalised_by_reference\tz-score\n')
