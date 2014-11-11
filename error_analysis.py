@@ -100,7 +100,7 @@ def slow_find_kmer_freq(reference, error_kmers):
 
 def characterise_deletions(deleted_kmers, typhi_kmers, output_dir):
     # iupac = ['R', 'Y', 'S', 'W', 'K', 'M', 'B', 'D', 'H', 'V', 'N']
-    ## normalise the deleted kmers by the occurance of that kmer in the reference genome
+    ## normalise the deleted kmers by the occurence of that kmer in the reference genome
     error_proportion_by_kmer = {}
     for each in typhi_kmers:
         if each in deleted_kmers:
@@ -116,7 +116,8 @@ def characterise_deletions(deleted_kmers, typhi_kmers, output_dir):
             error_proportion_by_k_len[len(kmer)] = []
             error_proportion_by_k_len[len(kmer)].append(error_proportion_by_kmer[kmer])
 
-    ## calculate the per-k-length mean and stdev of the deletion proportion, for comparison against each k-mer to allow calc
+    ## calculate the per-k-length mean and stdev of the deletion proportion,
+    ## for comparison against each k-mer to allow calc
     ## of z-score
     mean_stdev_error_proportion_by_k_len = {}
     for each in error_proportion_by_k_len:
@@ -131,9 +132,11 @@ def characterise_deletions(deleted_kmers, typhi_kmers, output_dir):
     with open('%s/deleted_kmers.txt' % (output_dir), 'w') as fo:
         fo.write('kmer\tkmer_length\tnumber_in_reference\tnumber_of_deletions\tdeletions_normalised_by_reference\tz-score\n')
         for each in error_proportion_by_kmer:
-            fo.write(each + '\t' + str(len(each)) + '\t' + str(typhi_kmers[each]) + '\t' + str(deleted_kmers[each]) + \
-                            '\t' + str(error_proportion_by_kmer[each]) + '\t' + str((error_proportion_by_kmer[each] - mean_stdev_error_proportion_by_k_len[len(each)][0]) /
+            fo.write(each + '\t' + str(len(each)) + '\t' + str(typhi_kmers[each]) + '\t'
+                     + str(deleted_kmers[each]) + '\t' + str(error_proportion_by_kmer[each]) + '\t'
+                     + str((error_proportion_by_kmer[each] - mean_stdev_error_proportion_by_k_len[len(each)][0]) /
                                                                mean_stdev_error_proportion_by_k_len[len(each)][1]) + '\n')
+
 
 
 def analyse_insertions(inserted_kmers, output_dir):
@@ -154,10 +157,18 @@ def analyse_insertions(inserted_kmers, output_dir):
         mean_stdev_error_proportion_by_k_len[each].append(np.mean(a))
         mean_stdev_error_proportion_by_k_len[each].append(np.std(a))
 
+    print mean_stdev_error_proportion_by_k_len
+
+    print inserted_kmers
+
     with open('%s/inserted_kmers.txt' % (output_dir), 'w') as fo:
         for each in inserted_kmers:
-            fo.write(str(each) + '\t' + str(len(each)) + '\t' + str(inserted_kmers[each]) + '\t' + str((inserted_kmers[each] -
+            ## if the stdev (i.e. mean_stdev_error_proportion_by_k_len[len(each)][1]) is 0 then the z-score cannot be calculated
+            ## this if statement stops the RuntimeError being raised
+            if mean_stdev_error_proportion_by_k_len[len(each)][1] != 0:
+                fo.write(str(each) + '\t' + str(len(each)) + '\t' + str(inserted_kmers[each]) + '\t' + str((inserted_kmers[each] -
                                                                                                         mean_stdev_error_proportion_by_k_len[len(each)][0]) / mean_stdev_error_proportion_by_k_len[len(each)][1]) + '\n')
+
 
 
 def total_len_error(erroneous_kmers, error_type):
