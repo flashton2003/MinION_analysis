@@ -162,6 +162,7 @@ def analyse_insertions(inserted_kmers, output_dir):
     print inserted_kmers
 
     with open('%s/inserted_kmers.txt' % (output_dir), 'w') as fo:
+        fo.write('kmer\tkmer_length\tfrequency of insertion\tz-score\n')
         for each in inserted_kmers:
             ## if the stdev (i.e. mean_stdev_error_proportion_by_k_len[len(each)][1]) is 0 then the z-score cannot be calculated
             ## this if statement stops the RuntimeError being raised
