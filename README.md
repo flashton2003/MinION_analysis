@@ -28,7 +28,7 @@ Therefore, this ROI provides evidence that node 25 and node 50 are neighbours in
 Requirements
 ===================
 
-The LAST aligner needs to be installed (available via homebrew on Mac OS X) and in the path. Similarly, the maf-convert.py script bundled with LAST needs to be in the path.
+The LAST aligner needs to be installed (available via homebrew on Mac OS X) and in the path. Similarly, the maf-convert.py script bundled with LAST needs to be in the path. LAST as configured here expects the reads to be in fasta format rather than fastq.
 The scripts were used with
 Python v2.7.6
 Numpy v1.6.2
