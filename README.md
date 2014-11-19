@@ -29,5 +29,7 @@ Requirements
 ===================
 
 The LAST aligner needs to be installed (available via homebrew on Mac OS X) and in the path. Similarly, the maf-convert.py script bundled with LAST needs to be in the path.
-Python >= 2.7.6
-Numpy >= 1.6.2
+The scripts were used with
+Python v2.7.6
+Numpy v1.6.2
+Samtools v0.1.19
