@@ -52,7 +52,12 @@ def parse_blast_text(blast_file):
                 read_contig_match = ReadContigMatch()
                 read_contig_match.sbjct = sbjct
             if line.startswith('Scor'):
-                score = line.split(' ')[-1]
+                ## the bits check is for a newer version of last/maf-convert
+                if re.search('bits', line):
+                    score = line.replace('(', ')').split(')')[1]
+                    # print score
+                else:
+                    score = line.split(' ')[-1]
                 read_contig_match.score = int(score)
             if line.startswith('Identi'):
                 split_line = line.replace('/', ' ').split(' ')
